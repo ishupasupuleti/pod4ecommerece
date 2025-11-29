@@ -51,14 +51,43 @@ FOLDER STRUCTURE
 
 src/
   components/
+      Navbar.jsx
+      Footer.jsx
+      ProductCard.jsx
+      Loader.jsx
+
   pages/
+      Home.jsx
+      ProductList.jsx
+      ProductDetails.jsx
+      Cart.jsx
+      Checkout.jsx
+      Orders.jsx
+      Profile.jsx
+
       Admin/
+        AdminDashboard.jsx
+        AddProduct.jsx
+        EditProduct.jsx
+        AdminOrders.jsx
+
   context/
+      AuthContext.jsx
+      CartContext.jsx
+
   services/
+      supabaseClient.js
+      productService.js
+      orderService.js
+      authService.js
+
   utils/
-  assets/
+      formatCurrency.js
+
+  assets/      // Your template images/fonts/icons
   App.jsx
   main.jsx
+
 
 ------------------------------------------------------------
 DATABASE SCHEMA
