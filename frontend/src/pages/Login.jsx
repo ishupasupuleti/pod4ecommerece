@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import './Login.css'
@@ -6,11 +6,23 @@ import './Login.css'
 function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [userType, setUserType] = useState('user') // 'user' or 'admin'
   const [isSignUp, setIsSignUp] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { signIn, signUp } = useAuth()
+  const { signIn, signUp, user, userRole } = useAuth()
   const navigate = useNavigate()
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      if (userRole === 'admin') {
+        navigate('/admin/dashboard', { replace: true })
+      } else {
+        navigate('/home', { replace: true })
+      }
+    }
+  }, [user, userRole, navigate])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -20,19 +32,25 @@ function Login() {
     try {
       let result
       if (isSignUp) {
-        result = await signUp(email, password)
+        result = await signUp(email, password, userType)
       } else {
-        result = await signIn(email, password)
+        result = await signIn(email, password, userType)
       }
 
       if (result.error) {
         setError(result.error.message)
+        setLoading(false)
+      } else if (result.data?.user) {
+        // The useEffect will handle navigation when user state updates
+        // Just wait a moment for state to update
+        setLoading(false)
       } else {
-        navigate('/dashboard')
+        setError('Login failed. Please try again.')
+        setLoading(false)
       }
     } catch (err) {
-      setError('An unexpected error occurred')
-    } finally {
+      console.error('Login error:', err)
+      setError(err.message || 'An unexpected error occurred')
       setLoading(false)
     }
   }
@@ -46,6 +64,32 @@ function Login() {
             ? 'Create your account to get started'
             : 'Welcome back! Please login to your account'}
         </p>
+
+        {/* User Type Selection - Only show for login, not signup */}
+        {!isSignUp && (
+          <div className="user-type-selector">
+            <button
+              type="button"
+              className={`user-type-btn ${userType === 'user' ? 'active' : ''}`}
+              onClick={() => {
+                setUserType('user')
+                setError('')
+              }}
+            >
+              Login as User
+            </button>
+            <button
+              type="button"
+              className={`user-type-btn ${userType === 'admin' ? 'active' : ''}`}
+              onClick={() => {
+                setUserType('admin')
+                setError('')
+              }}
+            >
+              Login as Admin
+            </button>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
@@ -76,7 +120,7 @@ function Login() {
           {error && <div className="error-message">{error}</div>}
 
           <button type="submit" className="submit-button" disabled={loading}>
-            {loading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Login'}
+            {loading ? 'Loading...' : isSignUp ? 'Sign Up' : `Login as ${userType === 'admin' ? 'Admin' : 'User'}`}
           </button>
         </form>
 
@@ -88,6 +132,9 @@ function Login() {
               onClick={() => {
                 setIsSignUp(!isSignUp)
                 setError('')
+                if (isSignUp) {
+                  setUserType('user') // Reset to user when switching to login
+                }
               }}
               className="toggle-button"
             >
